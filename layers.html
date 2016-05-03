@@ -1,0 +1,81 @@
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Leaflet Example</title>
+<link href="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css" rel="stylesheet">
+<script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
+<style type="text/css">
+	#map {
+        width:100%;
+        height:100%;
+	}
+
+</style>
+</head>
+<body>
+ <div id="map"></div>
+<script src="Leaflet.MakiMarkers.js" type="text/javascript"></script>
+<script>
+
+	var mapboxaccesstoken = 'pk.eyJ1IjoiY2FvYSIsImEiOiJjaWdqbTNqeHowMDVtdXJrcm9vNHJyZ3FnIn0.vylxVPML0OKfGi2SpjN9NA',
+		mapboxAttribution = 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
+		maxzoom = 16,
+		url = 'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}'
+
+	var littleton2 = L.marker([39.11, -106.02]),
+		denver2    = L.marker([39.44, -103.99]),
+		aurora2    = L.marker([39.23, -103.8]),
+		golden2    = L.marker([39.97, -106.23]);
+
+	var alex = L.layerGroup([littleton2, denver2, aurora2, golden2]);
+		
+	var littleton = L.marker([39.61, -105.02]).bindPopup('This is Littleton, CO.'),
+		denver    = L.marker([39.74, -104.99]).bindPopup('This is Denver, CO.'),
+		aurora    = L.marker([39.73, -104.8]).bindPopup('This is Aurora, CO.'),
+		golden    = L.marker([39.77, -105.23]).bindPopup('This is Golden, CO.');
+
+	var cities = L.layerGroup([littleton, denver, aurora, golden]);
+
+	var light = L.tileLayer(url, {
+		attribution: mapboxAttribution,
+		maxZoom: maxzoom,
+		id: 'mapbox.light',
+		accessToken: mapboxaccesstoken
+	});
+	
+	var streets = L.tileLayer(url, {
+		attribution: mapboxAttribution,
+		maxZoom: maxzoom,
+		id: 'mapbox.streets',
+		accessToken: mapboxaccesstoken
+	});
+
+	var large = L.MakiMarkers.icon({icon: "bicycle", color: "#b0b", size: "l"});
+	var bike1 = L.marker([39.6, -105.5], {icon: large});
+	var bike = L.layerGroup([bike1]);
+	var med = L.MakiMarkers.icon({icon: "school", color: "#99ff00", size: "m"});
+	var ped1 = L.marker([39.7, -105.4], {icon: med});
+	var ped = L.layerGroup([ped1]);
+	
+	var map = L.map('map', {
+		center: [39.73, -104.99],
+		zoom: 9,
+		layers: [light, cities, alex, bike]
+	});
+	
+	var baseMaps = {
+		"Light": light,
+		"Streets": streets
+	};
+
+	var overlayMaps = {
+		"Alex": alex,
+		"Cities": cities,
+		"bikes": bike,
+		"pedestrians": ped,
+	};
+
+	L.control.layers(baseMaps, overlayMaps).addTo(map);
+	
+</script>
+</body>
+</html>
