@@ -1,0 +1,147 @@
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Washtenaw BikePed Crashes</title>
+<link href="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css" rel="stylesheet">
+<script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
+<style type="text/css">
+ #map {
+        width:100%;
+        height:100%;
+}
+</style>
+</head>
+<body>
+ <div id="map"></div>
+<script src="Washtenaw_Crashes_Bikes.json" type="text/javascript"></script>
+<script src="Washtenaw_Crashes_Peds.json" type="text/javascript"></script>
+<script src="Washtenaw_Roads.json" type="text/javascript"></script>
+<script src="gz_2010_us_050_00_20m_MI_counties.json" type="text/javascript"></script>
+<script>
+
+	var mapboxaccesstoken = 'pk.eyJ1IjoiY2FvYSIsImEiOiJjaWdqbTNqeHowMDVtdXJrcm9vNHJyZ3FnIn0.vylxVPML0OKfGi2SpjN9NA',
+		mapboxAttribution = 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
+		minzoom = 7,
+		maxzoom = 19,
+		url = 'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}'
+
+	var light = L.tileLayer(url, {
+		attribution: mapboxAttribution,
+		minZoom: minzoom,
+		maxZoom: maxzoom,
+		id: 'mapbox.light',
+		accessToken: mapboxaccesstoken
+	});
+	
+	var streets = L.tileLayer(url, {
+		attribution: mapboxAttribution,
+		minZoom: minzoom,
+		maxZoom: maxzoom,
+		id: 'mapbox.streets',
+		accessToken: mapboxaccesstoken
+	});
+
+	var Thunderforest_OpenCycleMap = L.tileLayer('http://{s}.tile.thunderforest.com/cycle/{z}/{x}/{y}.png', {
+		attribution: '&copy; <a href="http://www.thunderforest.com/">Thunderforest</a>, &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+		minZoom: minzoom,
+		maxZoom: maxzoom,		
+	});
+	
+	var rds = L.geoJson(roads, {
+		style: {"color": "#31a354",
+				"weight": 2,
+				"opacity": 1},
+		onEachFeature: 	function (feature, layer) {
+			var popupContent = "<p>GeoJSON " + feature.geometry.type + "--> Leaflet vector!</p>";
+			popupContent += "name: " + feature.properties.RDNAME + "<br>"
+			popupContent += "AADT: " + Math.floor(feature.properties.AADT) + "<br>"
+			popupContent += "id: " + feature.properties.OBJECTID + "<br>"
+			layer.bindPopup(popupContent);
+		},
+	});
+
+	bikes = L.geoJson(bicycles, {
+		style: function (feature) {
+			return feature.properties && feature.properties.style;
+		},
+		onEachFeature: 	function (feature, layer) {
+			var popupContent = "<p>GeoJSON " + feature.geometry.type + "--> Leaflet vector!</p>";
+			popupContent += "id: " + feature.properties.crsh_id + "<br>"
+			popupContent += "yr: " + feature.properties.nyear + "<br>"
+			popupContent += " #: " + feature.properties.bcyl_invl_ind
+			layer.bindPopup(popupContent);
+		},
+		pointToLayer: function (feature, latlng) {
+			return L.circleMarker(latlng, {
+				radius: 8,
+				fillColor: "#3182bd",
+				color: "#9ecae1",
+				weight: 1,
+				opacity: 1,
+				fillOpacity: 0.5
+			});
+		}
+	});
+
+	peds = L.geoJson(pedestrians, {
+		style: function (feature) {
+			return feature.properties && feature.properties.style;
+		},		
+		filter: function (feature, layer) {
+			return true;
+		},		
+		onEachFeature: 	function (feature, layer) {
+			var popupContent = "<p>I started out as a GeoJSON " + feature.geometry.type + ".<br>Now I'm a Leaflet vector!</p>";
+			popupContent += "id: " + feature.properties.crsh_id + "<br>"
+			popupContent += "yr: " + feature.properties.nyear + "<br>"		
+			popupContent += " #: " + feature.properties.ped_invl_ind			
+			layer.bindPopup(popupContent);
+		},
+		pointToLayer: function (feature, latlng) {
+			return L.circleMarker(latlng, {
+				radius: 8,
+				fillColor: "#de2d26",
+				color: "#fee0d2",
+				weight: 2,
+				opacity: 1,
+				fillOpacity: 0.5
+			});
+		}
+	});
+	
+	counties = L.geoJson(MichiganCounties, {
+		filter: function(feature) {
+			if (feature.properties.NAME == "Washtenaw" || feature.properties.NAME == "Kent") {
+				return true;
+			}
+		},
+		style: {"color": "#ff7800",
+				"weight": 2,
+				"opacity": 0.5},
+	});
+
+	var map = L.map('map', {
+		center: [42.3, -83.7],
+		zoom: 11,
+		layers: [light, peds]
+	});
+
+ 	var baseMaps = {
+		"Light": light,
+		"Streets": streets,
+		"Thunderforest": Thunderforest_OpenCycleMap
+	};
+	
+	var overlayMaps = {
+		"Bicycles": bikes,
+		"Pedestrians": peds,
+		"Roads": rds,
+		"Counties": counties,
+	};
+	
+	L.control.layers(baseMaps, overlayMaps).addTo(map);
+
+
+	
+</script>
+</body>
+</html>
