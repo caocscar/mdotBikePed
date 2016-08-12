@@ -1,25 +1,43 @@
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<title>Washtenaw BikePed Crashes</title>
-<link href="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css" rel="stylesheet">
-<script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
-<style type="text/css">
- #map {
-        width:100%;
-        height:100%;
-}
-</style>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+	<title>Washtenaw BikePed Crashes</title>
+	<link href="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css" rel="stylesheet">
+	<script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
+	<script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-markercluster/v0.4.0/leaflet.markercluster.js'></script>
+	<link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-markercluster/v0.4.0/MarkerCluster.css' rel='stylesheet' />
+	<link href='Leaflet Examples/MarkerCluster.Default.css' rel='stylesheet' />
+	<style type="text/css">
+		#map {
+			width:100%;
+			height:100%;
+		}
+		.info {
+			padding: 6px 8px;
+			font: 14px/16px Arial, Helvetica, sans-serif;
+			background: white;
+			background: rgba(255,255,255,0.8);
+			box-shadow: 0 0 15px rgba(0,0,0,0.2);
+			border-radius: 5px;
+		}
+		.info h4 {
+			margin: 0 0 5px;
+			color: #777;
+		}
+	</style>
 </head>
 <body>
- <div id="map"></div>
+	<div id="map"></div>
 <script src="Washtenaw_Crashes_Bikes.json" type="text/javascript"></script>
 <script src="Washtenaw_Crashes_Peds.json" type="text/javascript"></script>
 <script src="Washtenaw_Roads.json" type="text/javascript"></script>
 <script src="gz_2010_us_050_00_20m_MI_counties.json" type="text/javascript"></script>
+<script src="Leaflet.MakiMarkers.js" type="text/javascript"></script>
+<script src="leaflet-heat.js"></script>
+
 <script>
 
-	var mapboxaccesstoken = <INSERT YOUR MAPBOX KEY HERE>,
-		mapboxAttribution = 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
+	var mapboxaccesstoken = 'pk.eyJ1IjoiY2FvYSIsImEiOiJjaWdqbTNqeHowMDVtdXJrcm9vNHJyZ3FnIn0.vylxVPML0OKfGi2SpjN9NA',
+		mapboxAttribution = 'Imagery © <a href="http://mapbox.com">Mapbox</a>',
 		minzoom = 7,
 		maxzoom = 19,
 		url = 'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}'
@@ -51,7 +69,7 @@
 				"weight": 2,
 				"opacity": 1},
 		onEachFeature: 	function (feature, layer) {
-			var popupContent = "<p>GeoJSON " + feature.geometry.type + "--> Leaflet vector!</p>";
+			var popupContent = "";
 			popupContent += "name: " + feature.properties.RDNAME + "<br>"
 			popupContent += "AADT: " + Math.floor(feature.properties.AADT) + "<br>"
 			popupContent += "id: " + feature.properties.OBJECTID + "<br>"
@@ -59,55 +77,45 @@
 		},
 	});
 
+	var bike_icon = L.MakiMarkers.icon({icon: "bicycle", color: "#1f78b4", size: "m"});
+		ped_icon = L.MakiMarkers.icon({icon: "school", color: "#fee0d2", size: "m"});
+	
+	function highlightFeature(e) {
+		info.update(e.target.feature.properties);
+	}
+
+	function hovertool(feature, layer) {
+		layer.on({
+			click: highlightFeature,
+		});
+	}
+	
 	bikes = L.geoJson(bicycles, {
-		style: function (feature) {
-			return feature.properties && feature.properties.style;
-		},
-		onEachFeature: 	function (feature, layer) {
-			var popupContent = "<p>GeoJSON " + feature.geometry.type + "--> Leaflet vector!</p>";
-			popupContent += "id: " + feature.properties.crsh_id + "<br>"
-			popupContent += "yr: " + feature.properties.nyear + "<br>"
-			popupContent += " #: " + feature.properties.bcyl_invl_ind
-			layer.bindPopup(popupContent);
-		},
+		onEachFeature: hovertool,
 		pointToLayer: function (feature, latlng) {
-			return L.circleMarker(latlng, {
-				radius: 8,
-				fillColor: "#3182bd",
-				color: "#9ecae1",
-				weight: 1,
-				opacity: 1,
-				fillOpacity: 0.5
-			});
-		}
+			return L.marker(latlng, {icon: bike_icon});
+		},
 	});
 
 	peds = L.geoJson(pedestrians, {
-		style: function (feature) {
-			return feature.properties && feature.properties.style;
-		},		
-		filter: function (feature, layer) {
-			return true;
-		},		
 		onEachFeature: 	function (feature, layer) {
-			var popupContent = "<p>I started out as a GeoJSON " + feature.geometry.type + ".<br>Now I'm a Leaflet vector!</p>";
+			var popupContent = "";
 			popupContent += "id: " + feature.properties.crsh_id + "<br>"
 			popupContent += "yr: " + feature.properties.nyear + "<br>"		
 			popupContent += " #: " + feature.properties.ped_invl_ind			
 			layer.bindPopup(popupContent);
 		},
 		pointToLayer: function (feature, latlng) {
-			return L.circleMarker(latlng, {
-				radius: 8,
-				fillColor: "#de2d26",
-				color: "#fee0d2",
-				weight: 2,
-				opacity: 1,
-				fillOpacity: 0.5
-			});
-		}
+			return L.marker(latlng, {icon: ped_icon});
+		},
 	});
+
+	// Cluster Markers
+	var cluster = L.markerClusterGroup({maxClusterRadius:80});
+	cluster.addLayer(bikes);
+	cluster.addLayer(peds);	
 	
+	// States
 	counties = L.geoJson(MichiganCounties, {
 		filter: function(feature) {
 			if (feature.properties.NAME == "Washtenaw" || feature.properties.NAME == "Kent") {
@@ -117,12 +125,25 @@
 		style: {"color": "#ff7800",
 				"weight": 2,
 				"opacity": 0.5},
+		onEachFeature: hovertool,
 	});
+
+	// HEAT LAYER
+	function geojson2heat(geojson) {
+		return geojson.features.map( function(feature) {
+			return [feature.geometry.coordinates[1], feature.geometry.coordinates[0]];
+		});
+	}
+	
+	var pedsheat = geojson2heat(pedestrians),
+		heat = L.heatLayer(pedsheat, {radius:25});
+
+	var tiles = L.tileLayer('washtenaw_tiles/{z}/{x}/{y}.png',{tms:true});
 
 	var map = L.map('map', {
 		center: [42.3, -83.7],
 		zoom: 11,
-		layers: [light, peds]
+		layers: [light, cluster]
 	});
 
  	var baseMaps = {
@@ -136,10 +157,30 @@
 		"Pedestrians": peds,
 		"Roads": rds,
 		"Counties": counties,
+		"Clusters": cluster,
+		"HeatMap": heat,
+		"Tiles": tiles,
 	};
 	
 	L.control.layers(baseMaps, overlayMaps).addTo(map);
+	
+	// INFO BOX
+	var info = L.control({position: 'bottomleft'});
 
+	info.onAdd = function (map) {
+		this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
+		this.update();
+		return this._div;
+	};
+
+	// method that we will use to update the control based on feature properties passed
+	info.update = function (props) {
+		this._div.innerHTML = '<h4>Zoom Level:  ' + map.getZoom() + '</h4>' +  (props ?
+			'<b>ID: ' + props.crsh_id + '</b><br/>Yr: ' + props.nyear + '<br/>Bicyclists: ' + props.bcyl_invl_ind
+			: 'Click on a bike icon');
+	};
+
+	info.addTo(map);
 
 	
 </script>
