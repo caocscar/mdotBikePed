@@ -2,7 +2,7 @@
 
 ## crashes.html
 Example javascript.Leaflet code for points, polylines, polygons for the software tool with popups, layers and multiple basemaps.
-You will need to insert your own MAPBPX API KEY to get the mapbox basemap to work.
+You will need to insert your own MAPBOX API KEY to get the mapbox basemap to work.
 
 ## Supporting geojson files
 Bike crashes in Washtenaw
